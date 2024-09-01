@@ -49,6 +49,9 @@ public:
     int check(int);
     void modify(int);
     void delete_rec(int);
+
+    bool isValidPhoneNumber(const char *phone);
+    bool isValidDays(int days);
 };
 
 void hotel::main_menu()
@@ -92,6 +95,27 @@ void hotel::main_menu()
         }
     }
 }
+bool hotel::isValidPhoneNumber(const char *phone)
+{
+    int length = strlen(phone);
+    if (length < 9)
+    {
+        return false;
+    }
+    for (int i = 0; i < length; ++i)
+    {
+        if (!isdigit(phone[i]))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool hotel::isValidDays(int days)
+{
+    return days > 0;
+}
 
 void hotel::add()
 {
@@ -105,7 +129,9 @@ void hotel::add()
     cin >> r;
     flag = check(r);
     if (flag)
+    {
         cout << "\n Sorry Sir..!!! Room is already booked";
+    }
     else
     {
         room_no = r;
@@ -114,13 +140,31 @@ void hotel::add()
         cin.getline(name, 40);
         cout << " Address: ";
         cin.getline(address, 60);
-        cout << " Phone No: ";
-        cin.getline(phone, 15);
-        cout << " No of Days to Checkout: ";
-        cin >> days;
-        Amount = days * 800;
-        fout.write(reinterpret_cast<char *>(this), sizeof(hotel));
-        cout << "\n Room is booked...!!!";
+
+        try
+        {
+            cout << " Phone No: ";
+            cin.getline(phone, 15);
+            if (!isValidPhoneNumber(phone))
+            {
+                throw runtime_error("Invalid phone number. Must be at least 9 digits and contain only numbers.");
+            }
+
+            cout << " No of Days to Checkout: ";
+            cin >> days;
+            if (!isValidDays(days))
+            {
+                throw runtime_error("Invalid number of days. Must be a positive integer.");
+            }
+
+            Amount = days * 800;
+            fout.write(reinterpret_cast<char *>(this), sizeof(hotel));
+            cout << "\n Room is booked...!!!";
+        }
+        catch (const runtime_error &e)
+        {
+            cout << "\n Error: " << e.what();
+        }
     }
 
     cout << "\n Press a key to continue.....!!";
@@ -192,10 +236,19 @@ void hotel::edit()
     cout << "\n Enter your choice: ";
     cin >> choice;
 
+    if (choice <= 0 || choice > 2)
+    {
+        cout << "\n Invalid choice. Please select option 1 or 2.";
+        cout << "\n Press a key to return to the main menu.";
+        cin.ignore().get();
+        return;
+    }
+
     system("cls");
     head();
     cout << "\n Enter room no: ";
     cin >> r;
+
     switch (choice)
     {
     case 1:
@@ -204,9 +257,8 @@ void hotel::edit()
     case 2:
         delete_rec(r);
         break;
-    default:
-        cout << "\n Wrong Choice.....!!";
     }
+
     cout << "\n Press a key to continue....!!!";
     cin.ignore().get();
 }
@@ -240,23 +292,41 @@ void hotel::modify(int r)
         file.read(reinterpret_cast<char *>(this), sizeof(hotel));
         if (room_no == r)
         {
-            cout << "\n Enter New Details";
-            cout << "\n -----------------";
-            cout << "\n Name: ";
-            cin.ignore();
-            cin.getline(name, 40);
-            cout << " Address: ";
-            cin.getline(address, 60);
-            cout << " Phone no: ";
-            cin.getline(phone, 15);
-            cout << " Days: ";
-            cin >> days;
-            Amount = days * 900;
-            file.seekg(pos);
-            file.write(reinterpret_cast<char *>(this), sizeof(hotel));
-            cout << "\n Record is modified....!!";
-            flag = 1;
-            break;
+            try
+            {
+                cout << "\n Enter New Details";
+                cout << "\n -----------------";
+                cout << "\n Name: ";
+                cin.ignore();
+                cin.getline(name, 40);
+                cout << " Address: ";
+                cin.getline(address, 60);
+
+                cout << " Phone no: ";
+                cin.getline(phone, 15);
+                if (!isValidPhoneNumber(phone))
+                {
+                    throw runtime_error("Invalid phone number. Must be at least 9 digits and contain only numbers.");
+                }
+
+                cout << " Days: ";
+                cin >> days;
+                if (!isValidDays(days))
+                {
+                    throw runtime_error("Invalid number of days. Must be a positive integer.");
+                }
+
+                Amount = days * 800;
+                file.seekg(pos);
+                file.write(reinterpret_cast<char *>(this), sizeof(hotel));
+                cout << "\n Record is modified....!!";
+                flag = 1;
+                break;
+            }
+            catch (const runtime_error &e)
+            {
+                cout << "\n Error: " << e.what();
+            }
         }
     }
 
